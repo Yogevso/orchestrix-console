@@ -90,3 +90,29 @@ export interface PaginatedResponse<T> {
   page: number;
   per_page: number;
 }
+
+export interface IncidentAnalysis {
+  incident_id: string;
+  incident_type: string;
+  summary: string;
+  root_cause: string;
+  reasoning_steps: string[];
+  correlations: {
+    sources: string[];
+    pattern: string;
+    severity: string;
+  }[];
+  timeline: {
+    timestamp: string;
+    event: string;
+    severity: string;
+  }[];
+  recommended_action: string;
+  quality: {
+    confidence: number;
+    signal_strength: number;
+    data_coverage: number;
+  };
+  source: 'ai' | 'rule-based';
+  prompt_version: string;
+}

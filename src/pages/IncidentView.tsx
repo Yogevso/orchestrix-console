@@ -1,9 +1,9 @@
 import { useState } from 'react';
-import { useQuery } from '@tanstack/react-query';
-import { fetchIncidents, fetchIncident } from '@/api/endpoints';
+import { useQuery, useMutation } from '@tanstack/react-query';
+import { fetchIncidents, fetchIncident, analyzeIncident } from '@/api/endpoints';
 import { PageHeader, SeverityBadge, StatusBadge, LoadingSpinner, EmptyState } from '@/components/ui';
 import { formatDate, formatDateFull, cn, SEVERITY_COLORS } from '@/utils';
-import { AlertTriangle, Clock, ArrowRight, Briefcase, Radio, Zap, ChevronRight, Play } from 'lucide-react';
+import { AlertTriangle, Clock, ArrowRight, Briefcase, Radio, Zap, ChevronRight, Play, Sparkles, X, Brain, Target, ListOrdered, Footprints, Link, Wrench } from 'lucide-react';
 import type { Incident, IncidentTimelineEntry } from '@/types';
 import { usePageTitle } from '@/hooks/usePageTitle';
 
@@ -81,13 +81,32 @@ export default function IncidentView() {
 }
 
 function IncidentDetail({ incident, onBack }: { incident: Incident | undefined; onBack: () => void }) {
+  const [showAnalysis, setShowAnalysis] = useState(false);
+  const { mutate: explain, data: analysis, isPending } = useMutation({
+    mutationFn: analyzeIncident,
+  });
+
   if (!incident) return <LoadingSpinner />;
 
+  const handleExplain = () => {
+    setShowAnalysis(true);
+    if (!analysis) explain(incident);
+  };
+
   return (
-    <div>
-      <button onClick={onBack} className="flex items-center gap-1.5 text-sm text-text-muted hover:text-white mb-4 transition-colors">
-        <ArrowRight className="w-4 h-4 rotate-180" /> Back to Incidents
-      </button>
+    <div className="relative">
+      <div className="flex items-center justify-between mb-4">
+        <button onClick={onBack} className="flex items-center gap-1.5 text-sm text-text-muted hover:text-white transition-colors">
+          <ArrowRight className="w-4 h-4 rotate-180" /> Back to Incidents
+        </button>
+        <button
+          onClick={handleExplain}
+          className="flex items-center gap-2 px-4 py-2 rounded-lg bg-primary/20 text-primary-light border border-primary/30 hover:bg-primary/30 hover:border-primary/50 transition-all font-medium text-sm"
+        >
+          <Sparkles className="w-4 h-4" />
+          Explain Incident
+        </button>
+      </div>
 
       {/* Header */}
       <div className="bg-surface rounded-xl border border-border p-5 mb-6">
@@ -173,6 +192,154 @@ function IncidentDetail({ incident, onBack }: { incident: Incident | undefined; 
           )}
         </div>
       </div>
+
+      {/* AI Analysis Panel */}
+      {showAnalysis && (
+        <div className="fixed inset-0 z-50 flex justify-end">
+          <div className="absolute inset-0 bg-black/50 backdrop-blur-sm" onClick={() => setShowAnalysis(false)} />
+          <div className="relative w-full max-w-lg bg-surface border-l border-border shadow-2xl overflow-y-auto animate-in slide-in-from-right">
+            <div className="sticky top-0 bg-surface border-b border-border p-5 flex items-center justify-between z-10">
+              <h3 className="text-base font-semibold text-white flex items-center gap-2">
+                <Brain className="w-5 h-5 text-primary" /> AI Incident Analysis
+              </h3>
+              <button onClick={() => setShowAnalysis(false)} className="p-1.5 rounded-lg hover:bg-surface-light text-text-muted hover:text-white transition-colors">
+                <X className="w-4 h-4" />
+              </button>
+            </div>
+
+            <div className="p-5 space-y-5">
+              {isPending ? (
+                <div className="flex flex-col items-center justify-center py-16 gap-3">
+                  <div className="w-10 h-10 border-2 border-primary/30 border-t-primary rounded-full animate-spin" />
+                  <p className="text-sm text-text-muted">Analyzing incident...</p>
+                </div>
+              ) : analysis ? (
+                <>
+                  {/* Source + Type badges */}
+                  <div className="flex items-center gap-2 flex-wrap">
+                    <span className={cn(
+                      'text-xs px-2.5 py-1 rounded-full border font-medium',
+                      analysis.source === 'ai' ? 'text-purple-400 bg-purple-400/10 border-purple-400/30' : 'text-cyan-400 bg-cyan-400/10 border-cyan-400/30'
+                    )}>
+                      {analysis.source === 'ai' ? '🤖 AI-powered' : '⚙️ Rule-based'}
+                    </span>
+                    <span className="text-xs px-2.5 py-1 rounded-full border text-text-muted bg-surface-lighter border-border font-medium">
+                      {analysis.incident_type.replace(/_/g, ' ')}
+                    </span>
+                    <span className="text-xs text-text-muted ml-auto">
+                      prompt {analysis.prompt_version}
+                    </span>
+                  </div>
+
+                  {/* Quality Scores */}
+                  <div className="grid grid-cols-3 gap-3">
+                    <QualityGauge label="Confidence" value={analysis.quality.confidence} />
+                    <QualityGauge label="Signal" value={analysis.quality.signal_strength} />
+                    <QualityGauge label="Coverage" value={analysis.quality.data_coverage} />
+                  </div>
+
+                  {/* Summary */}
+                  <AnalysisSection icon={Sparkles} title="Summary" color="text-blue-400">
+                    <p className="text-sm text-text leading-relaxed">{analysis.summary}</p>
+                  </AnalysisSection>
+
+                  {/* Root Cause */}
+                  <AnalysisSection icon={Target} title="Root Cause" color="text-red-400">
+                    <p className="text-sm text-text leading-relaxed">{analysis.root_cause}</p>
+                  </AnalysisSection>
+
+                  {/* Recommended Action */}
+                  <AnalysisSection icon={Wrench} title="Recommended Action" color="text-green-400">
+                    <p className="text-sm text-text leading-relaxed">{analysis.recommended_action}</p>
+                  </AnalysisSection>
+
+                  {/* Correlations */}
+                  {analysis.correlations.length > 0 && (
+                    <AnalysisSection icon={Link} title="Correlations" color="text-orange-400">
+                      <div className="space-y-3">
+                        {analysis.correlations.map((c, i) => (
+                          <div key={i} className="p-3 rounded-lg bg-surface border border-border">
+                            <p className="text-sm text-text leading-relaxed">{c.pattern}</p>
+                            <div className="flex items-center gap-2 mt-2 flex-wrap">
+                              {c.sources.map((s) => (
+                                <span key={s} className="text-xs px-2 py-0.5 rounded bg-surface-lighter text-text-muted">{s}</span>
+                              ))}
+                              <SeverityBadge severity={c.severity as 'info' | 'warning' | 'error' | 'critical'} />
+                            </div>
+                          </div>
+                        ))}
+                      </div>
+                    </AnalysisSection>
+                  )}
+
+                  {/* Timeline */}
+                  <AnalysisSection icon={ListOrdered} title="AI Timeline" color="text-yellow-400">
+                    <ol className="space-y-2">
+                      {analysis.timeline.map((step, i) => (
+                        <li key={i} className="flex gap-2 text-sm text-text">
+                          <span className="text-text-muted shrink-0">{i + 1}.</span>
+                          <div className="flex-1">
+                            <span className="leading-relaxed">{step.event}</span>
+                            <div className="flex items-center gap-2 mt-0.5">
+                              <span className="text-xs text-text-muted">{new Date(step.timestamp).toLocaleTimeString()}</span>
+                              <span className={cn(
+                                'text-xs px-1.5 py-0.5 rounded border',
+                                SEVERITY_COLORS[step.severity as keyof typeof SEVERITY_COLORS] ?? 'text-text-muted border-border'
+                              )}>{step.severity}</span>
+                            </div>
+                          </div>
+                        </li>
+                      ))}
+                    </ol>
+                  </AnalysisSection>
+
+                  {/* Reasoning Steps */}
+                  <AnalysisSection icon={Footprints} title="Reasoning Steps" color="text-purple-400">
+                    <ul className="space-y-2">
+                      {analysis.reasoning_steps.map((step, i) => (
+                        <li key={i} className="flex gap-2 text-sm text-text">
+                          <span className="text-primary mt-1 shrink-0">→</span>
+                          <span className="leading-relaxed">{step}</span>
+                        </li>
+                      ))}
+                    </ul>
+                  </AnalysisSection>
+                </>
+              ) : null}
+            </div>
+          </div>
+        </div>
+      )}
+    </div>
+  );
+}
+
+function QualityGauge({ label, value }: { label: string; value: number }) {
+  const pct = Math.round(value * 100);
+  return (
+    <div className="p-3 rounded-lg bg-surface-light border border-border text-center">
+      <p className="text-xs text-text-muted mb-1">{label}</p>
+      <div className="h-1.5 rounded-full bg-surface-lighter overflow-hidden mb-1.5">
+        <div
+          className={cn(
+            'h-full rounded-full transition-all',
+            value >= 0.8 ? 'bg-green-400' : value >= 0.6 ? 'bg-yellow-400' : 'bg-red-400'
+          )}
+          style={{ width: `${pct}%` }}
+        />
+      </div>
+      <span className="text-sm font-semibold text-white">{pct}%</span>
+    </div>
+  );
+}
+
+function AnalysisSection({ icon: Icon, title, color, children }: { icon: typeof Clock; title: string; color: string; children: React.ReactNode }) {
+  return (
+    <div className="bg-surface-light rounded-lg border border-border p-4">
+      <h4 className="text-sm font-semibold text-white mb-3 flex items-center gap-2">
+        <Icon className={cn('w-4 h-4', color)} /> {title}
+      </h4>
+      {children}
     </div>
   );
 }

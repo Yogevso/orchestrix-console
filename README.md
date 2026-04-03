@@ -20,6 +20,7 @@ It transforms backend infrastructure into a single, observable system.
 ## Key Highlights
 
 - Real-time system observability across jobs, events, and alerts
+- **AI-powered incident analysis** — one-click "Explain Incident" via [Orchestrix AI](https://github.com/Yogevso/orchestrix-ai)
 - Incident debugging via correlated timelines (events + jobs + actions)
 - Interactive analytics dashboards for operational insights
 - Dark/light mode with system preference detection
@@ -41,6 +42,7 @@ It transforms backend infrastructure into a single, observable system.
 - **Analytics Dashboard** — Jobs over time, failure rate, events by severity with interactive Recharts visualizations
 - **Audit Logs** — Track user and system actions with filtering by user/action
 - **Incident Investigation** — Correlated timeline showing how events, jobs, alerts, and actions relate during an incident
+- **AI Explain Incident** — Calls [Orchestrix AI](https://github.com/Yogevso/orchestrix-ai) (`POST /ai/analyze-incident`) to get root cause analysis, reasoning steps, correlations, recommended action, and quality scores — displayed in a slide-out panel
 - **Command Palette** — `Ctrl+K` to quickly navigate between any page
 - **Keyboard Navigation** — `j`/`k`/`Enter` for table navigation without touching the mouse
 - **URL-Synced Filters** — Filter state persists in the URL, making filtered views shareable
@@ -63,6 +65,21 @@ CPU spike → anomaly detected → job created → job failed → retry → succ
 
 Each step is visualized and connected, enabling fast debugging of complex system behavior.
 
+### AI-Powered Explanation
+
+Click **"Explain Incident"** to call [Orchestrix AI](https://github.com/Yogevso/orchestrix-ai) — the response is displayed in a slide-out panel with:
+
+- **Summary** — AI-generated incident overview
+- **Root Cause** — identified origin of the failure
+- **Recommended Action** — suggested remediation
+- **Correlations** — cross-source signal patterns (e.g. deployment → error chain)
+- **AI Timeline** — ordered events with severity and timestamps
+- **Reasoning Steps** — transparent chain-of-thought trace
+- **Quality Scores** — confidence, signal strength, and data coverage
+- **Source Badge** — shows whether analysis came from AI (GPT-4o) or rule-based fallback
+
+When Orchestrix AI is not running, a built-in mock fallback generates a contextual analysis from the incident data so the demo works standalone.
+
 ## Tech Stack
 
 | Layer | Tech |
@@ -79,17 +96,20 @@ Each step is visualized and connected, enabling fast debugging of complex system
 ## Architecture
 
 ```
-React App (UI)
+React App (Orchestrix Console)
        │
-       ▼
-FastAPI (Orchestrix API)
+       ├── /api → Orchestrix Backend (localhost:8000)
+       │            ├─ PostgreSQL (jobs, events, incidents)
+       │            ├─ Redis + Celery (async workers)
+       │            └─ WebSocket (live event stream)
        │
-       ├─ PostgreSQL (jobs, events, incidents)
-       ├─ Redis + Celery (async workers)
-       └─ WebSocket (live event stream)
+       └── /ai  → Orchestrix AI (localhost:8001)
+                    ├─ Correlation Engine (deterministic)
+                    ├─ RAG Retriever (keyword filtering)
+                    └─ LLM Service (OpenAI GPT-4o + rule-based fallback)
 ```
 
-The frontend proxies `/api` requests to the backend (`localhost:8000`). Mock data is included for standalone demo.
+The frontend proxies `/api` requests to the backend (`localhost:8000`) and `/ai` requests to [Orchestrix AI](https://github.com/Yogevso/orchestrix-ai) (`localhost:8001`). Mock data and fallback analysis are included for standalone demo.
 
 ## Getting Started
 
@@ -99,6 +119,21 @@ npm run dev
 ```
 
 Open http://localhost:5173 and login with **admin / admin**.
+
+### With AI Integration
+
+To enable live AI-powered incident analysis, run [Orchestrix AI](https://github.com/Yogevso/orchestrix-ai) alongside:
+
+```bash
+# Terminal 1 — Console
+npm run dev
+
+# Terminal 2 — Orchestrix AI (port 8001)
+cd ../orchestrix-ai
+uvicorn app.main:app --reload --port 8001
+```
+
+The "Explain Incident" button will call the AI service automatically. Without it, the built-in mock fallback is used.
 
 ## Project Structure
 
