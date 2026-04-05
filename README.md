@@ -1,6 +1,6 @@
 # Orchestrix Console
 
-**The single entry point for the [Orchestrix Platform](#platform-architecture).** Consumes data from all four backend services — jobs & workflows from Engine, incident analysis from AI, host metrics from Insights, auth from IAM. Emits operator actions (retry, cancel, investigate) back through each service API.
+**The single entry point for the [Orchestrix Platform](https://github.com/Yogevso/Orchestrix-Platform).** Consumes data from all four backend services — jobs & workflows from Engine, incident analysis from AI, host metrics from Insights, auth from IAM. Emits operator actions (retry, cancel, investigate) back through each service API.
 
 Real-time operations console for orchestrating async workflows, analyzing system telemetry, and debugging incidents across distributed systems.
 

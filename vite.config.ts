@@ -11,23 +11,24 @@ export default defineConfig({
     },
   },
   server: {
+    host: '0.0.0.0',
     proxy: {
       '/api': {
-        target: 'http://localhost:8000',
+        target: process.env.VITE_ENGINE_URL || 'http://localhost:8000',
         changeOrigin: true,
         rewrite: (path: string) => path.replace(/^\/api/, ''),
       },
       '/ai': {
-        target: 'http://localhost:8001',
+        target: process.env.VITE_AI_URL || 'http://localhost:8001',
         changeOrigin: true,
       },
       '/insights': {
-        target: 'http://localhost:8002',
+        target: process.env.VITE_INSIGHTS_URL || 'http://localhost:8002',
         changeOrigin: true,
         rewrite: (path: string) => path.replace(/^\/insights/, ''),
       },
       '/iam': {
-        target: 'http://localhost:8003',
+        target: process.env.VITE_IAM_URL || 'http://localhost:8003',
         changeOrigin: true,
         rewrite: (path: string) => path.replace(/^\/iam/, ''),
       },
