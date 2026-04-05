@@ -5,8 +5,8 @@ import { formatDate } from '@/utils';
 import { Link } from 'react-router-dom';
 import { ArrowRight, AlertTriangle, Server, Brain, Activity, Shield, Cpu, Users, GitBranch, BarChart3 } from 'lucide-react';
 import { usePageTitle } from '@/hooks/usePageTitle';
-import { fetchWorkers, fetchQueueStats } from '@/services/engineApi';
-import { fetchHostMetrics } from '@/services/insightsApi';
+import { getWorkers, getQueueStats } from '@/services/engineApi';
+import { getHostMetrics } from '@/services/insightsApi';
 
 function SourceChip({ source }: { source: string }) {
   const styles: Record<string, string> = {
@@ -28,9 +28,9 @@ export default function Dashboard() {
   const eventsQuery = useQuery({ queryKey: ['events-recent'], queryFn: () => fetchEvents() });
   const analyticsQuery = useQuery({ queryKey: ['analytics'], queryFn: fetchAnalytics });
   const incidentsQuery = useQuery({ queryKey: ['incidents'], queryFn: fetchIncidents });
-  const workersQuery = useQuery({ queryKey: ['engine-workers'], queryFn: fetchWorkers, retry: false });
-  const queuesQuery = useQuery({ queryKey: ['engine-queues'], queryFn: fetchQueueStats, retry: false });
-  const hostsQuery = useQuery({ queryKey: ['insights-hosts'], queryFn: fetchHostMetrics, retry: false });
+  const workersQuery = useQuery({ queryKey: ['engine-workers'], queryFn: getWorkers, retry: false });
+  const queuesQuery = useQuery({ queryKey: ['engine-queues'], queryFn: getQueueStats, retry: false });
+  const hostsQuery = useQuery({ queryKey: ['insights-hosts'], queryFn: getHostMetrics, retry: false });
 
   if (analyticsQuery.isLoading) return <LoadingSpinner />;
 

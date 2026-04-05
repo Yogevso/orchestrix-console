@@ -6,7 +6,7 @@ import { formatDate, formatDateFull, cn, SEVERITY_COLORS } from '@/utils';
 import { AlertTriangle, Clock, ArrowRight, Briefcase, Radio, Zap, ChevronRight, Play, Sparkles, X, Brain, Target, ListOrdered, Footprints, Link, Wrench, Server, Activity, Cpu } from 'lucide-react';
 import type { Incident, IncidentTimelineEntry } from '@/types';
 import { usePageTitle } from '@/hooks/usePageTitle';
-import { fetchHostMetrics } from '@/services/insightsApi';
+import { getHostMetrics } from '@/services/insightsApi';
 
 function SourceChip({ source }: { source: string }) {
   const styles: Record<string, string> = {
@@ -399,7 +399,7 @@ function TimelineEntry({ entry, isLast }: { entry: IncidentTimelineEntry; isLast
 }
 
 function TelemetryContext() {
-  const { data } = useQuery({ queryKey: ['insights-hosts-incident'], queryFn: fetchHostMetrics, retry: false });
+  const { data } = useQuery({ queryKey: ['insights-hosts-incident'], queryFn: getHostMetrics, retry: false });
   const hosts = data?.hosts ?? [];
   if (hosts.length === 0) return null;
 

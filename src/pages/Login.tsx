@@ -106,7 +106,7 @@ export default function Login() {
           </button>
 
           <p className="text-xs text-text-muted/60 text-center mt-3">
-            Uses IAM service for authentication. Dev fallback: admin / admin
+            Uses IAM service for authentication. Dev: admin@orchestrix.dev / admin1234
           </p>
         </form>
       </div>
