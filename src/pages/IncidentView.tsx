@@ -3,9 +3,23 @@ import { useQuery, useMutation } from '@tanstack/react-query';
 import { fetchIncidents, fetchIncident, analyzeIncident } from '@/api/endpoints';
 import { PageHeader, SeverityBadge, StatusBadge, LoadingSpinner, EmptyState } from '@/components/ui';
 import { formatDate, formatDateFull, cn, SEVERITY_COLORS } from '@/utils';
-import { AlertTriangle, Clock, ArrowRight, Briefcase, Radio, Zap, ChevronRight, Play, Sparkles, X, Brain, Target, ListOrdered, Footprints, Link, Wrench } from 'lucide-react';
+import { AlertTriangle, Clock, ArrowRight, Briefcase, Radio, Zap, ChevronRight, Play, Sparkles, X, Brain, Target, ListOrdered, Footprints, Link, Wrench, Server, Activity, Cpu } from 'lucide-react';
 import type { Incident, IncidentTimelineEntry } from '@/types';
 import { usePageTitle } from '@/hooks/usePageTitle';
+import { fetchHostMetrics } from '@/services/insightsApi';
+
+function SourceChip({ source }: { source: string }) {
+  const styles: Record<string, string> = {
+    engine: 'text-blue-400 bg-blue-400/10 border-blue-400/30',
+    insights: 'text-emerald-400 bg-emerald-400/10 border-emerald-400/30',
+    ai: 'text-purple-400 bg-purple-400/10 border-purple-400/30',
+  };
+  return (
+    <span className={`text-[10px] px-1.5 py-0.5 rounded border font-medium uppercase tracking-wider ${styles[source] ?? 'text-text-muted border-border'}`}>
+      {source}
+    </span>
+  );
+}
 
 const TIMELINE_ICONS: Record<string, typeof Clock> = {
   event: Radio,
@@ -64,6 +78,11 @@ export default function IncidentView() {
                       <span>{formatDate(inc.created_at)}</span>
                       <span>{inc.timeline.length} events in timeline</span>
                       <span>{inc.related_jobs.length} related jobs</span>
+                      <div className="flex items-center gap-1 ml-auto">
+                        {inc.related_jobs.length > 0 && <SourceChip source="engine" />}
+                        {inc.related_events.length > 0 && <SourceChip source="insights" />}
+                        <SourceChip source="ai" />
+                      </div>
                     </div>
                   </div>
                   <ChevronRight className="w-5 h-5 text-text-muted group-hover:text-primary-light transition-colors shrink-0 mt-1" />
@@ -151,11 +170,11 @@ function IncidentDetail({ incident, onBack }: { incident: Incident | undefined; 
         </div>
       </div>
 
-      <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
+      <div className="grid grid-cols-1 lg:grid-cols-2 gap-6 mb-6">
         {/* Related Events */}
         <div className="bg-surface rounded-xl border border-border p-5">
           <h3 className="text-sm font-semibold text-white mb-4 flex items-center gap-2">
-            <Radio className="w-4 h-4 text-blue-400" /> Related Events ({incident.related_events.length})
+            <Radio className="w-4 h-4 text-blue-400" /> Related Events ({incident.related_events.length}) <SourceChip source="engine" />
           </h3>
           <div className="space-y-2">
             {incident.related_events.map((event) => (
@@ -173,7 +192,7 @@ function IncidentDetail({ incident, onBack }: { incident: Incident | undefined; 
         {/* Related Jobs */}
         <div className="bg-surface rounded-xl border border-border p-5">
           <h3 className="text-sm font-semibold text-white mb-4 flex items-center gap-2">
-            <Briefcase className="w-4 h-4 text-purple-400" /> Related Jobs ({incident.related_jobs.length})
+            <Briefcase className="w-4 h-4 text-purple-400" /> Related Jobs ({incident.related_jobs.length}) <SourceChip source="engine" />
           </h3>
           {incident.related_jobs.length === 0 ? (
             <p className="text-sm text-text-muted">No related jobs</p>
@@ -192,6 +211,9 @@ function IncidentDetail({ incident, onBack }: { incident: Incident | undefined; 
           )}
         </div>
       </div>
+
+      {/* Telemetry Context */}
+      <TelemetryContext />
 
       {/* AI Analysis Panel */}
       {showAnalysis && (
@@ -371,6 +393,34 @@ function TimelineEntry({ entry, isLast }: { entry: IncidentTimelineEntry; isLast
           <span className={cn('text-xs px-2 py-0.5 rounded border', severityColor)}>{entry.severity}</span>
           <span className="text-xs text-text-muted bg-surface-lighter px-2 py-0.5 rounded">{entry.type}</span>
         </div>
+      </div>
+    </div>
+  );
+}
+
+function TelemetryContext() {
+  const { data } = useQuery({ queryKey: ['insights-hosts-incident'], queryFn: fetchHostMetrics, retry: false });
+  const hosts = data?.hosts ?? [];
+  if (hosts.length === 0) return null;
+
+  return (
+    <div className="bg-surface rounded-xl border border-border p-5 mb-6">
+      <h3 className="text-sm font-semibold text-white mb-4 flex items-center gap-2">
+        <Cpu className="w-4 h-4 text-emerald-400" /> System Telemetry Context <SourceChip source="insights" />
+      </h3>
+      <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-3">
+        {hosts.slice(0, 6).map((host) => (
+          <div key={host.hostname} className="p-3 rounded-lg bg-surface-light flex items-center justify-between">
+            <div>
+              <p className="text-sm text-white font-medium">{host.hostname}</p>
+              <p className="text-xs text-text-muted">{host.process_count} processes</p>
+            </div>
+            <div className="text-right">
+              <p className={`text-xs font-medium ${(host.avg_cpu ?? 0) > 80 ? 'text-red-400' : 'text-text-muted'}`}>CPU {(host.avg_cpu ?? 0).toFixed(0)}%</p>
+              <p className={`text-xs font-medium ${(host.avg_memory ?? 0) > 80 ? 'text-red-400' : 'text-text-muted'}`}>MEM {(host.avg_memory ?? 0).toFixed(0)}%</p>
+            </div>
+          </div>
+        ))}
       </div>
     </div>
   );

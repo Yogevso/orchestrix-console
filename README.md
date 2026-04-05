@@ -1,8 +1,8 @@
 # Orchestrix Console
 
-> A real-time operations console for orchestrating async workflows, analyzing system telemetry, and debugging incidents across distributed systems.
+**The single entry point for the [Orchestrix Platform](#platform-architecture).** Consumes data from all four backend services — jobs & workflows from Engine, incident analysis from AI, host metrics from Insights, auth from IAM. Emits operator actions (retry, cancel, investigate) back through each service API.
 
-Turn backend infrastructure into a visual, interactive platform — from job execution to incident investigation.
+Real-time operations console for orchestrating async workflows, analyzing system telemetry, and debugging incidents across distributed systems.
 
 ---
 
@@ -22,6 +22,29 @@ Orchestrix Console is the **control plane / operator UI** of the Orchestrix Plat
 - AI-powered incident analysis from Orchestrix AI (`/ai/*`)
 - Host metrics, alerts, and timeline from System Insights API
 - JWT tokens and user context from Identity Access Service
+
+### Platform Architecture
+
+```mermaid
+flowchart TB
+    Console["Orchestrix Console\n:5173 — Operator UI"]
+    Engine["Orchestrix Engine\n:8000 — Execution Plane"]
+    AI["Orchestrix AI\n:8001 — Analysis Plane"]
+    Insights["System Insights API\n:8002 — Telemetry Backend"]
+    IAM["Identity Access Service\n:8003 — Auth & RBAC"]
+
+    Console -- "/api — jobs, workflows, workers" --> Engine
+    Console -- "/ai — incident analysis" --> AI
+    Console -- "/insights — host metrics" --> Insights
+    Console -- "/iam — login, tokens" --> IAM
+
+    AI -- "poll events & jobs" --> Engine
+    AI -- "correlate host metrics" --> Insights
+    Engine -. "validate JWT" .-> IAM
+    AI -. "validate JWT" .-> IAM
+
+    style Console fill:#0ea5e9,color:#fff,stroke:#0ea5e9
+```
 
 ---
 
