@@ -20,6 +20,16 @@ export default defineConfig({
         target: 'http://localhost:8001',
         changeOrigin: true,
       },
+      '/insights': {
+        target: 'http://localhost:8002',
+        changeOrigin: true,
+        rewrite: (path: string) => path.replace(/^\/insights/, ''),
+      },
+      '/iam': {
+        target: 'http://localhost:8003',
+        changeOrigin: true,
+        rewrite: (path: string) => path.replace(/^\/iam/, ''),
+      },
     },
   },
 })

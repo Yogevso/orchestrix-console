@@ -6,6 +6,25 @@ Turn backend infrastructure into a visual, interactive platform — from job exe
 
 ---
 
+## Part of the Orchestrix Platform
+
+Orchestrix Console is the **control plane / operator UI** of the Orchestrix Platform — the single entry point for managing workflows, investigating incidents, and monitoring system health.
+
+| Service | Role | Interaction |
+|---------|------|-------------|
+| **[Orchestrix Engine](https://github.com/Yogevso/Orchestrix-Engine)** | Execution plane | Console calls Engine REST API + WebSocket for job/workflow management and live updates |
+| **[Orchestrix AI](https://github.com/Yogevso/orchestrix-ai)** | Analysis plane | Console sends incidents to AI and displays root-cause analysis, reasoning, and recommendations |
+| **[System Insights API](https://github.com/Yogevso/system-insights-api)** | Telemetry backend | Console fetches host/service metrics and alerts for the telemetry dashboard |
+| **[Identity Access Service](https://github.com/Yogevso/identity-access-service)** | Shared auth | Console authenticates via IAM login and passes JWT tokens to all platform APIs |
+
+**Data Console consumes:**
+- Jobs, workflows, workers, queue stats from Engine (`/api/*`)
+- AI-powered incident analysis from Orchestrix AI (`/ai/*`)
+- Host metrics, alerts, and timeline from System Insights API
+- JWT tokens and user context from Identity Access Service
+
+---
+
 ## Why This Exists
 
 Modern backend systems generate large volumes of jobs, events, and alerts — but debugging issues requires jumping between multiple tools.

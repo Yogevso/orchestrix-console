@@ -1,12 +1,14 @@
 import { useState } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { useAuth } from '@/hooks/useAuth';
-import { login as loginApi } from '@/api/endpoints';
+import { login as mockLoginApi } from '@/api/endpoints';
+import { iamLogin } from '@/services/iamApi';
 import { Zap, Loader2 } from 'lucide-react';
 
 export default function Login() {
-  const [username, setUsername] = useState('');
+  const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
+  const [tenantSlug, setTenantSlug] = useState('');
   const [error, setError] = useState('');
   const [loading, setLoading] = useState(false);
   const { login } = useAuth();
@@ -17,11 +19,20 @@ export default function Login() {
     setError('');
     setLoading(true);
     try {
-      const res = await loginApi({ username, password });
-      login(res.access_token, res.user);
+      // Try IAM login first
+      const res = await iamLogin({ tenant_slug: tenantSlug || 'default', email, password });
+      localStorage.setItem('orchestrix_refresh_token', res.refresh_token);
+      login(res.access_token, { id: res.user.id, username: res.user.email, role: res.user.role });
       navigate('/');
     } catch {
-      setError('Invalid credentials. Try admin / admin');
+      // Fall back to mock login for development
+      try {
+        const res = await mockLoginApi({ username: email, password });
+        login(res.access_token, res.user);
+        navigate('/');
+      } catch {
+        setError('Invalid credentials');
+      }
     } finally {
       setLoading(false);
     }
@@ -46,14 +57,27 @@ export default function Login() {
           )}
 
           <div>
-            <label className="block text-sm text-text-muted mb-1.5">Username</label>
+            <label className="block text-sm text-text-muted mb-1.5">Tenant</label>
             <input
               type="text"
-              value={username}
-              onChange={(e) => setUsername(e.target.value)}
+              value={tenantSlug}
+              onChange={(e) => setTenantSlug(e.target.value)}
               className="w-full bg-surface-light border border-border px-4 py-2.5 text-sm text-white placeholder-text-muted/50 focus:outline-none focus:border-primary transition-colors"
               style={{ borderRadius: 'var(--radius-sm)' }}
-              placeholder="Enter username"
+              placeholder="default"
+              autoComplete="organization"
+            />
+          </div>
+
+          <div>
+            <label className="block text-sm text-text-muted mb-1.5">Email</label>
+            <input
+              type="text"
+              value={email}
+              onChange={(e) => setEmail(e.target.value)}
+              className="w-full bg-surface-light border border-border px-4 py-2.5 text-sm text-white placeholder-text-muted/50 focus:outline-none focus:border-primary transition-colors"
+              style={{ borderRadius: 'var(--radius-sm)' }}
+              placeholder="Enter email"
               autoComplete="username"
             />
           </div>
@@ -73,7 +97,7 @@ export default function Login() {
 
           <button
             type="submit"
-            disabled={loading || !username || !password}
+            disabled={loading || !email || !password}
             className="w-full bg-primary hover:bg-primary-dark disabled:opacity-50 disabled:cursor-not-allowed text-white font-medium px-4 py-2.5 text-sm transition-colors flex items-center justify-center gap-2"
             style={{ borderRadius: 'var(--radius-sm)' }}
           >
@@ -82,7 +106,7 @@ export default function Login() {
           </button>
 
           <p className="text-xs text-text-muted/60 text-center mt-3">
-            Demo credentials: admin / admin
+            Uses IAM service for authentication. Dev fallback: admin / admin
           </p>
         </form>
       </div>

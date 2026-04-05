@@ -1,6 +1,6 @@
 import { useState, useEffect, useRef, useCallback } from 'react';
 import { useNavigate } from 'react-router-dom';
-import { Search, Briefcase, Radio, BarChart3, FileText, AlertTriangle, LayoutDashboard, Command } from 'lucide-react';
+import { Search, Briefcase, Radio, BarChart3, FileText, AlertTriangle, LayoutDashboard, Command, Server, GitBranch, Activity } from 'lucide-react';
 
 interface CommandItem {
   id: string;
@@ -22,9 +22,12 @@ export default function CommandPalette() {
     { id: 'dashboard', label: 'Go to Dashboard', description: 'System overview', icon: LayoutDashboard, action: () => navigate('/'), keywords: ['home', 'overview'] },
     { id: 'jobs', label: 'Go to Jobs', description: 'Manage async workflows', icon: Briefcase, action: () => navigate('/jobs'), keywords: ['workflow', 'task', 'queue'] },
     { id: 'events', label: 'Go to Events', description: 'Live event feed', icon: Radio, action: () => navigate('/events'), keywords: ['alerts', 'logs', 'stream'] },
+    { id: 'workers', label: 'Go to Workers', description: 'Engine worker pool', icon: Server, action: () => navigate('/workers'), keywords: ['pool', 'heartbeat', 'concurrency'] },
+    { id: 'workflows', label: 'Go to Workflows', description: 'DAG workflow runs', icon: GitBranch, action: () => navigate('/workflow-runs'), keywords: ['dag', 'pipeline', 'steps', 'runs'] },
     { id: 'analytics', label: 'Go to Analytics', description: 'Charts and insights', icon: BarChart3, action: () => navigate('/analytics'), keywords: ['charts', 'metrics', 'graphs'] },
     { id: 'audit', label: 'Go to Audit Logs', description: 'User and system actions', icon: FileText, action: () => navigate('/audit-logs'), keywords: ['history', 'actions'] },
     { id: 'incidents', label: 'Go to Incidents', description: 'Investigate correlated events', icon: AlertTriangle, action: () => navigate('/incidents'), keywords: ['debug', 'investigate', 'timeline'] },
+    { id: 'telemetry', label: 'Go to Telemetry', description: 'Host and service metrics', icon: Activity, action: () => navigate('/telemetry'), keywords: ['cpu', 'memory', 'hosts', 'services', 'metrics'] },
   ];
 
   const filtered = query

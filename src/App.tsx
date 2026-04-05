@@ -12,9 +12,12 @@ import Dashboard from '@/pages/Dashboard';
 const Jobs = lazy(() => import('@/pages/Jobs'));
 const JobDetails = lazy(() => import('@/pages/JobDetails'));
 const Events = lazy(() => import('@/pages/Events'));
+const Workers = lazy(() => import('@/pages/Workers'));
+const WorkflowRuns = lazy(() => import('@/pages/WorkflowRuns'));
 const Analytics = lazy(() => import('@/pages/Analytics'));
 const AuditLogs = lazy(() => import('@/pages/AuditLogs'));
 const IncidentView = lazy(() => import('@/pages/IncidentView'));
+const Telemetry = lazy(() => import('@/pages/Telemetry'));
 const NotFound = lazy(() => import('@/pages/NotFound'));
 
 function App() {
@@ -52,9 +55,12 @@ function App() {
           <Route path="/jobs" element={<Suspense fallback={<LoadingSpinner />}><Jobs /></Suspense>} />
           <Route path="/jobs/:id" element={<Suspense fallback={<LoadingSpinner />}><JobDetails /></Suspense>} />
           <Route path="/events" element={<Suspense fallback={<LoadingSpinner />}><Events /></Suspense>} />
+          <Route path="/workers" element={<Suspense fallback={<LoadingSpinner />}><Workers /></Suspense>} />
+          <Route path="/workflow-runs" element={<Suspense fallback={<LoadingSpinner />}><WorkflowRuns /></Suspense>} />
           <Route path="/analytics" element={<Suspense fallback={<LoadingSpinner />}><Analytics /></Suspense>} />
           <Route path="/audit-logs" element={<Suspense fallback={<LoadingSpinner />}><AuditLogs /></Suspense>} />
           <Route path="/incidents" element={<Suspense fallback={<LoadingSpinner />}><IncidentView /></Suspense>} />
+          <Route path="/telemetry" element={<Suspense fallback={<LoadingSpinner />}><Telemetry /></Suspense>} />
         </Route>
         <Route path="*" element={<Suspense fallback={<LoadingSpinner />}><NotFound /></Suspense>} />
       </Routes>

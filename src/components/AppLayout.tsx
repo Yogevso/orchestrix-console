@@ -4,16 +4,20 @@ import { useTheme } from '@/hooks/useTheme';
 import {
   LayoutDashboard, Briefcase, Radio, BarChart3,
   FileText, AlertTriangle, LogOut, Zap, Sun, Moon, Monitor,
+  Server, GitBranch, Activity,
 } from 'lucide-react';
 import DesignPicker from '@/components/DesignPicker';
 
 const NAV_ITEMS = [
   { to: '/', icon: LayoutDashboard, label: 'Dashboard' },
   { to: '/jobs', icon: Briefcase, label: 'Jobs' },
+  { to: '/workers', icon: Server, label: 'Workers' },
+  { to: '/workflow-runs', icon: GitBranch, label: 'Workflows' },
   { to: '/events', icon: Radio, label: 'Events' },
   { to: '/analytics', icon: BarChart3, label: 'Analytics' },
   { to: '/audit-logs', icon: FileText, label: 'Audit Logs' },
   { to: '/incidents', icon: AlertTriangle, label: 'Incidents' },
+  { to: '/telemetry', icon: Activity, label: 'Telemetry' },
 ];
 
 const THEME_OPTIONS = [
